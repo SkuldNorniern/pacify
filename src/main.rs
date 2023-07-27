@@ -1,3 +1,7 @@
+mod venv;
+mod config;
+mod project;
+
 use clap::{Arg, ArgAction, Command};
 
 use std::process::exit;
@@ -13,12 +17,11 @@ fn cli() -> Command {
                 .about("Initialize a new project")
                 .arg(
                     Arg::new("path")
-                        .help("Project name")
-                        .short('n')
-                        .long("name")
-                        .value_name("NAME")
+                        .help("Project path")
                         .action(ArgAction::Set)
-                        .required(true),
+                        .num_args(1..)
+                        .default_value("./")
+                        //.required(true),
                 ),
         )
         .subcommand(
@@ -77,7 +80,13 @@ fn main() {
     let args = cli().get_matches();
 
 
-    //match args.subcommand() {
-        
-    //}
+    match args.subcommand() {
+       Some(("init", arg)) => {
+           project::new_project(arg.get_one::<String>("path").expect("unable to get project path"));
+       } 
+        _ => {
+            println!("WIP");
+            exit(1);
+        }
+}
 }

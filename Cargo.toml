@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 clap = "4.3.19"
 curl = "0.4.44"
+serde = {version="1.0.176", features = ["derive"]}
 toml = "0.7.6"
