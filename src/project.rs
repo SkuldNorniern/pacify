@@ -7,7 +7,7 @@ use std::{
     process::{Command, Stdio},
 };
 
-use crate::config::Config;
+use crate::config::{Config, Dependency};
 use crate::venv::{new_venv};
 
 pub fn new_project(path: &str) -> Result<(), ()> {
@@ -43,7 +43,7 @@ pub fn new_project(path: &str) -> Result<(), ()> {
     let project_name = project_path.parent().unwrap().file_name().unwrap();
     let raw_system_python_version = Command::new("python3")
         .arg("-V")
-        .stdout(Stdio::inherit())
+        .stdout(Stdio::piped())
         .stdin(Stdio::inherit())
         .output()
         .unwrap()
@@ -91,7 +91,7 @@ fn install_project_dependencies() -> Result<(), ()> {
 
     // Install dependencies
     let pb = ProgressBar::new(dependencies.len() as u64);
-    pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {count}/{total_dependencies} ({eta})")
+    pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {count}/{total_dependencies} ({eta}) {msg}")
         .unwrap()
         .with_key("eta", |state: &ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
         .progress_chars("#>-"));
@@ -99,6 +99,7 @@ fn install_project_dependencies() -> Result<(), ()> {
     for dependency in dependencies {
         let install_arg = format!("\"{}=={}\"", dependency.name, dependency.version);
         let install_command = "pip3".to_string() + " install " + &install_arg;
+        pb.set_message(dependency.name.clone());
         let term = Command::new("bash")
             .arg("-c")
             .arg("source env/bin/activate;".to_string() + install_command.as_str())
@@ -110,6 +111,50 @@ fn install_project_dependencies() -> Result<(), ()> {
         pb.inc(1);
     }
     pb.finish_with_message("installed dependencies");
+
+    Ok(())
+}
+
+pub fn add_dependency(name : &str, version: Option<&str>) -> Result<(), ()> {
+    let config_path = Path::new("pacify.toml");
+    if !config_path.exists() {
+        println!("pacify enviroment does not exist!");
+        std::process::exit(1);
+    }
+
+    let mut config = Config::load(config_path.to_str().unwrap().to_string()).unwrap();
+    
+    let version_str = match version {
+        Some(v) => v.to_string(),
+        None => {
+            // Use a dummy pip install command to extract available versions
+            let raw_versions_info = Command::new("bash")
+                .arg("-c")
+                .arg("source env/bin/activate; pip3 install ".to_string() + name + "==" + " 2>&1 | grep 'from versions:'")
+                .output()
+                .expect("failed to get versions info");
+            let versions_info = String::from_utf8_lossy(&raw_versions_info.stdout);
+
+            // Extract the latest version, assuming the last one listed is the latest
+            let version_list_start = versions_info.rfind('(').unwrap();
+            let version_list_end = versions_info.rfind(')').unwrap();
+            let version_list = &versions_info[version_list_start+1..version_list_end];
+            let versions: Vec<&str> = version_list.split(',').collect();
+            let latest_version = versions.last().unwrap().trim();
+
+            println!("Latest version of {}: {}", name, latest_version);
+            latest_version.to_string()
+        }
+    };
+    
+    config.dependencies.dependencies.push(Dependency {
+        name: name.to_string(),
+        version: version_str,
+        ..Default::default()
+    });
+    Config::save(Some(config),config_path.to_str().unwrap().to_string()).unwrap();
+
+    let _ = install_project_dependencies();
 
     Ok(())
 }

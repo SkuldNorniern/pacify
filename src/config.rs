@@ -39,7 +39,7 @@ impl Config {
         }
 
         if !path_file.exists() {
-            Self::save(path_file.to_str().unwrap().to_string()).unwrap();
+            Self::save(None,path_file.to_str().unwrap().to_string()).unwrap();
         }
 
         match Self::load(path_file.to_str().unwrap().to_string()) {
@@ -58,9 +58,12 @@ impl Config {
         Ok(config)
     }
 
-    pub fn save(path: String) -> Result<(), std::io::Error> {
+    pub fn save(content:Option<Config>,path: String) -> Result<(), std::io::Error> {
         let path = Path::new(&path);
-        let contents = toml::to_string(&Config::default()).unwrap();
+        let contents = match content {
+            Some(config) => toml::to_string(&config).unwrap(),
+            None => toml::to_string(&Config::default()).unwrap(),
+        };
         fs::write(path, contents)?;
         Ok(())
     }

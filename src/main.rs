@@ -61,13 +61,20 @@ fn main() {
 
     match args.subcommand() {
         Some(("init", arg)) => {
-            project::new_project(
+            let _ = project::new_project(
                 arg.get_one::<String>("path")
                     .expect("unable to get project path"),
-            );
+            ).expect("failed to create project");
         }
         Some(("run", _)) => {
-            project::run_project().expect("failed to run project");
+            let _ = project::run_project().expect("failed to run project");
+        }
+        Some(("add", arg))=> {
+            let version_info = arg.get_one::<String>("version");
+            let _ = project::add_dependency(
+                arg.get_one::<String>("package name").expect("unable to get package name"),
+                version_info.map(|v| v.as_str()),
+            ).expect("failed to add dependency");
         }
         _ => {
             println!("WIP");
