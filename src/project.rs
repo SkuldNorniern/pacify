@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::config::{Config, Dependency};
-use crate::venv::{new_venv};
+use crate::venv::new_venv;
 
 pub fn new_project(path: &str) -> Result<(), ()> {
     if Path::new("pacify.toml").exists() {
@@ -55,7 +55,7 @@ pub fn new_project(path: &str) -> Result<(), ()> {
     let _config = Config::new(
         path.clone(),
         project_name.to_str().unwrap(),
-        &system_python_version.as_str(),
+        system_python_version.as_str(),
     );
     let _config_path = Path::new("pacify.toml");
     //Config::save(config,config_path.to_str().unwrap().to_string()).expect("failed to save config");
@@ -87,7 +87,7 @@ fn install_project_dependencies() -> Result<(), ()> {
         std::process::exit(1);
     }
     let config = Config::load(config_path.to_str().unwrap().to_string()).unwrap();
-    let dependencies = config.dependencies.dependencies.clone();
+    let dependencies = config.dependencies.dependencies;
 
     // Install dependencies
     let pb = ProgressBar::new(dependencies.len() as u64);
@@ -115,7 +115,7 @@ fn install_project_dependencies() -> Result<(), ()> {
     Ok(())
 }
 
-pub fn add_dependency(name : &str, version: Option<&str>) -> Result<(), ()> {
+pub fn add_dependency(name: &str, version: Option<&str>) -> Result<(), ()> {
     let config_path = Path::new("pacify.toml");
     if !config_path.exists() {
         println!("pacify enviroment does not exist!");
@@ -123,14 +123,19 @@ pub fn add_dependency(name : &str, version: Option<&str>) -> Result<(), ()> {
     }
 
     let mut config = Config::load(config_path.to_str().unwrap().to_string()).unwrap();
-    
+
     let version_str = match version {
         Some(v) => v.to_string(),
         None => {
             // Use a dummy pip install command to extract available versions
             let raw_versions_info = Command::new("bash")
                 .arg("-c")
-                .arg("source env/bin/activate; pip3 install ".to_string() + name + "==" + " 2>&1 | grep 'from versions:'")
+                .arg(
+                    "source env/bin/activate; pip3 install ".to_string()
+                        + name
+                        + "=="
+                        + " 2>&1 | grep 'from versions:'",
+                )
                 .output()
                 .expect("failed to get versions info");
             let versions_info = String::from_utf8_lossy(&raw_versions_info.stdout);
@@ -138,7 +143,7 @@ pub fn add_dependency(name : &str, version: Option<&str>) -> Result<(), ()> {
             // Extract the latest version, assuming the last one listed is the latest
             let version_list_start = versions_info.rfind('(').unwrap();
             let version_list_end = versions_info.rfind(')').unwrap();
-            let version_list = &versions_info[version_list_start+1..version_list_end];
+            let version_list = &versions_info[version_list_start + 1..version_list_end];
             let versions: Vec<&str> = version_list.split(',').collect();
             let latest_version = versions.last().unwrap().trim();
 
@@ -146,13 +151,13 @@ pub fn add_dependency(name : &str, version: Option<&str>) -> Result<(), ()> {
             latest_version.to_string()
         }
     };
-    
+
     config.dependencies.dependencies.push(Dependency {
         name: name.to_string(),
         version: version_str,
         ..Default::default()
     });
-    Config::save(Some(config),config_path.to_str().unwrap().to_string()).unwrap();
+    Config::save(Some(config), config_path.to_str().unwrap().to_string()).unwrap();
 
     let _ = install_project_dependencies();
 

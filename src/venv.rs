@@ -1,5 +1,4 @@
-
-use std::process::{Command};
+use std::process::Command;
 
 /*pub fn activate_venv() -> Result<(), ()> {
     //check if venv exists

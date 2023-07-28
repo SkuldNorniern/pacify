@@ -1,15 +1,17 @@
 use serde::{Deserialize, Serialize};
-use toml;
+
 
 use std::{default::Default, fs, path::Path};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Default)]
 pub struct Config {
     pub project: Project,
     pub dependencies: Dependencies,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Default)]
 pub struct Project {
     pub name: Option<String>,
     pub author: Option<String>,
@@ -18,6 +20,7 @@ pub struct Project {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Default)]
 pub struct Dependencies {
     pub dependencies: Vec<Dependency>,
 }
@@ -39,7 +42,7 @@ impl Config {
         }
 
         if !path_file.exists() {
-            Self::save(None,path_file.to_str().unwrap().to_string()).unwrap();
+            Self::save(None, path_file.to_str().unwrap().to_string()).unwrap();
         }
 
         match Self::load(path_file.to_str().unwrap().to_string()) {
@@ -58,7 +61,7 @@ impl Config {
         Ok(config)
     }
 
-    pub fn save(content:Option<Config>,path: String) -> Result<(), std::io::Error> {
+    pub fn save(content: Option<Config>, path: String) -> Result<(), std::io::Error> {
         let path = Path::new(&path);
         let contents = match content {
             Some(config) => toml::to_string(&config).unwrap(),
@@ -69,32 +72,10 @@ impl Config {
     }
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            project: Project::default(),
-            dependencies: Dependencies::default(),
-        }
-    }
-}
 
-impl Default for Project {
-    fn default() -> Self {
-        Self {
-            name: None,
-            author: None,
-            python_version: None,
-            project_version: None,
-        }
-    }
-}
-impl Default for Dependencies {
-    fn default() -> Self {
-        Self {
-            dependencies: Vec::new(),
-        }
-    }
-}
+
+
+
 impl Default for Dependency {
     fn default() -> Self {
         Self {
