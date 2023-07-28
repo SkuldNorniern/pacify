@@ -1,36 +1,36 @@
-use toml;
 use serde::{Deserialize, Serialize};
+use toml;
 
 use std::{default::Default, fs, path::Path};
-
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
     pub project: Project,
-    pub dependencies: Dependency,
-    
+    pub dependencies: Dependencies,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Project{
+pub struct Project {
     pub name: Option<String>,
     pub author: Option<String>,
     pub python_version: Option<String>,
     pub project_version: Option<String>,
-    
-    
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Dependency{
-    
+pub struct Dependencies {
+    pub dependencies: Vec<Dependency>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Dependency {
     pub name: String,
     pub version: String,
     pub extra: Option<Vec<String>>,
 }
 
 impl Config {
-    pub fn new(path:&str,_name: &str,_version: &str) -> Self {
+    pub fn new(path: &str, _name: &str, _version: &str) -> Self {
         let path_base = Path::new(path);
         let path_file = path_base.join(Path::new("pacify.toml"));
 
@@ -70,7 +70,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             project: Project::default(),
-            dependencies: Dependency::default(),
+            dependencies: Dependencies::default(),
         }
     }
 }
@@ -85,7 +85,13 @@ impl Default for Project {
         }
     }
 }
-
+impl Default for Dependencies {
+    fn default() -> Self {
+        Self {
+            dependencies: Vec::new(),
+        }
+    }
+}
 impl Default for Dependency {
     fn default() -> Self {
         Self {
