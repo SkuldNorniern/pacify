@@ -1,6 +1,7 @@
 mod config;
 mod project;
 mod venv;
+mod version;
 
 use clap::{Arg, ArgAction, Command};
 
@@ -21,10 +22,10 @@ fn cli() -> Command {
                     .default_value("./"), //.required(true),
             ),
         )
-        .subcommand(Command::new("build").about("Build a project"))
+        //.subcommand(Command::new("build").about("Build a project"))
         .subcommand(Command::new("new").about("Create a new project"))
         .subcommand(Command::new("run"))
-        .subcommand(Command::new("test"))
+        //.subcommand(Command::new("test"))
         .subcommand(Command::new("clean"))
         .subcommand(
             Command::new("add")
@@ -44,6 +45,7 @@ fn cli() -> Command {
                         .action(ArgAction::Set),
                 ),
         )
+
         .subcommand(
             Command::new("update").about("Update a package").arg(
                 Arg::new("package name")

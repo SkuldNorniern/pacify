@@ -8,6 +8,7 @@ use std::{
 };
 
 use crate::config::{Config, Dependency};
+use crate::version::version_query;
 use crate::venv::new_venv;
 
 fn strip_trailing_newline(input: &str) -> &str {
@@ -141,26 +142,12 @@ pub fn add_dependency(name: &str, version: Option<&str>) -> Result<(), ()> {
         Some(v) => v.to_string(),
         None => {
             // Use a dummy pip install command to extract available versions
-            let raw_versions_info = Command::new("bash")
-                .arg("-c")
-                .arg(
-                    "source env/bin/activate; pip3 install ".to_string()
-                        + name
-                        + "=="
-                        + " 2>&1 | grep 'from versions:'",
-                )
-                .output()
-                .expect("failed to get versions info");
-            let versions_info = String::from_utf8_lossy(&raw_versions_info.stdout);
+            let raw_versions_info = version_query(name);
+            let versions = raw_versions_info.unwrap();
 
-            // Extract the latest version, assuming the last one listed is the latest
-            let version_list_start = versions_info.rfind('(').unwrap();
-            let version_list_end = versions_info.rfind(')').unwrap();
-            let version_list = &versions_info[version_list_start + 1..version_list_end];
-            let versions: Vec<&str> = version_list.split(',').collect();
-            let latest_version = versions.last().unwrap().trim();
+            let latest_version = versions[0].clone();
 
-            println!("Latest version of {}: {}", name, latest_version);
+            println!("Installing {}: {}", name, latest_version);
             latest_version.to_string()
         }
     };
@@ -175,3 +162,5 @@ pub fn add_dependency(name: &str, version: Option<&str>) -> Result<(), ()> {
 
     Ok(())
 }
+
+
