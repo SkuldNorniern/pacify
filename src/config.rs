@@ -1,13 +1,15 @@
 use serde::{Deserialize, Serialize};
 
-
+use std::collections::BTreeMap;
 use std::{default::Default, fs, path::Path};
 
+pub type Deps=BTreeMap<String, Dependency>;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[derive(Default)]
 pub struct Config {
     pub project: Project,
-    pub dependencies: Dependencies,
+    //#[serde(skip_serializing_if = "Deps::is_empty")]
+    pub dependencies: Deps,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -21,15 +23,9 @@ pub struct Project {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[derive(Default)]
-pub struct Dependencies {
-    pub dependencies: Vec<Dependency>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Dependency {
-    pub name: String,
     pub version: String,
-    pub extra: Option<Vec<String>>,
+    pub extra: Option<String>,
 }
 
 impl Config {
@@ -57,7 +53,7 @@ impl Config {
     pub fn load(path: String) -> Result<Self, std::io::Error> {
         let path = Path::new(&path);
         let contents = fs::read_to_string(path)?;
-        let config = toml::from_str(&contents).unwrap();
+        let config = toml::from_str(&contents).expect("failed to parse config");
         Ok(config)
     }
 
@@ -76,12 +72,4 @@ impl Config {
 
 
 
-impl Default for Dependency {
-    fn default() -> Self {
-        Self {
-            name: "".to_string(),
-            version: "".to_string(),
-            extra: None,
-        }
-    }
-}
+
