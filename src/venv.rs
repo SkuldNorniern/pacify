@@ -54,6 +54,6 @@ pub fn new_venv() -> Result<(), ()> {
     //if !path.exists() {
     //    std::fs::create_dir("env").expect("failed to create env directory");
     //}
-    let _ = Command::new("virtualenv").arg("env").output();
+    let _ = Command::new("virtualenv").arg("venv").output();
     Ok(())
 }

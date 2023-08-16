@@ -76,16 +76,28 @@ pub fn new_project(path: &str) -> Result<(), ()> {
 
     Ok(())
 }
+
+pub fn clean_project() -> Result<(), ()> {
+    // remove env folder
+    std::fs::remove_dir_all("venv").unwrap();
+    new_venv().expect("failed to create venv");
+    Ok(())
+}
+
 pub fn run_project() -> Result<(), ()> {
     let config_path = Path::new("pacify.toml");
     if !config_path.exists() {
         println!("pacify enviroment does not exist");
         std::process::exit(1);
     }
+    // check if there is a virtual enviroment
+    if !Path::new("venv/bin/activate").exists() {
+        new_venv().expect("failed to create venv");
+    }
     let _ = install_project_dependencies();
     let _ = Command::new("bash")
         .arg("-c")
-        .arg("source env/bin/activate; python3 src/main.py")
+        .arg("source venv/bin/activate; python3 src/main.py")
         .stdout(Stdio::inherit())
         .stdin(Stdio::inherit())
         .output()
@@ -116,7 +128,7 @@ fn install_project_dependencies() -> Result<(), ()> {
         pb.set_message(dependency.0.clone());
         let term = Command::new("bash")
             .arg("-c")
-            .arg("source env/bin/activate;".to_string() + install_command.as_str())
+            .arg("source venv/bin/activate;".to_string() + install_command.as_str())
             .stdout(Stdio::piped())
             .stdin(Stdio::inherit())
             .output();

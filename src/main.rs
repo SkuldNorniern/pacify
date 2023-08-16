@@ -81,6 +81,9 @@ fn main() {
             )
             .expect("failed to add dependency");
         }
+        Some(("clean", _)) => {
+            project::clean_project().expect("failed to clean project");
+        }
         _ => {
             println!("WIP");
             exit(1);
