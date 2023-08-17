@@ -85,4 +85,4 @@ Email: skuldnorniern@gmail.com
 
 ---
 
-Note: This README is based on the provided `main.rs` file. Some features might be under development, and the README will be updated accordingly as the project evolves.
+Note: Some features might be under development, and the README will be updated accordingly as the project evolves.
